@@ -2799,11 +2799,9 @@ async function renderDiscover() {
     return;
   }
 
-  if (Object.keys(discoverCache).length) {
-    renderDiscoverSections();
-  } else {
-    fetchAllSections(readBooks, topTags, null);
-  }
+  // Always fetch fresh — cache was causing silent failures
+  discoverCache = {};
+  fetchAllSections(readBooks, topTags, null);
 }
 
 async function refreshDiscover() {
@@ -2849,6 +2847,7 @@ function fetchBooksJSONP(query) {
 
 // Build all section definitions then fetch each
 async function fetchAllSections(readBooks, topTags, debugEl) {
+  console.log('fetchAllSections called, readBooks:', readBooks.length, 'topTags:', topTags);
   const gen = ++discoverGen;
   discoverLoading = true;
 
