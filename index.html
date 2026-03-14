@@ -2817,32 +2817,17 @@ async function refreshDiscover() {
   fetchAllSections(readBooks, topTags);
 }
 
-// JSONP fetch — works from file:// without CORS issues
-function fetchBooksJSONP(query) {
-  return new Promise((resolve) => {
-    const cbName = 'gbcb_' + Math.random().toString(36).slice(2);
-    const timeout = setTimeout(() => {
-      delete window[cbName];
-      const el = document.getElementById(cbName + '_script');
-      if (el) el.remove();
-      resolve([]);
-    }, 8000);
-
-    window[cbName] = (data) => {
-      clearTimeout(timeout);
-      delete window[cbName];
-      const el = document.getElementById(cbName + '_script');
-      if (el) el.remove();
-      resolve(data.items || []);
-    };
-
-    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=20&printType=books&orderBy=relevance&langRestrict=en&callback=${cbName}`;
-    const script = document.createElement('script');
-    script.id = cbName + '_script';
-    script.src = url;
-    script.onerror = () => { clearTimeout(timeout); delete window[cbName]; resolve([]); };
-    document.head.appendChild(script);
-  });
+// Fetch books via plain fetch() — works on https:// (GitHub Pages)
+async function fetchBooksJSONP(query) {
+  try {
+    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=20&printType=books&orderBy=relevance&langRestrict=en`;
+    const resp = await fetch(url);
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    return data.items || [];
+  } catch(e) {
+    return [];
+  }
 }
 
 // Build all section definitions then fetch each
